@@ -25,8 +25,9 @@ jobs:
       - name: Extract repository name
         run: |
           repo_name="${GITHUB_REPOSITORY#*/}"  
-          echo "Repository name: $repo_name"
-          echo "REPO_NAME=$repo_name" >> $GITHUB_ENV 
+          repo_name_lowercase=$(echo "$repo_name" | tr '[:upper:]' '[:lower:]')  # convert to lowercase
+          echo "Repository name: $repo_name_lowercase"
+          echo "REPO_NAME=$repo_name_lowercase" >> $GITHUB_ENV 
 
       - name: Build and push
         uses: docker/build-push-action@v4
