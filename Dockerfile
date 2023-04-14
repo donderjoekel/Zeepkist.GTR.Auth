@@ -5,7 +5,7 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY "ZeepkistGTR.Auth.csproj" .
+COPY "Zeepkist.GTR.Auth.csproj" .
 RUN dotnet restore
 COPY . .
 WORKDIR /src
@@ -18,4 +18,4 @@ RUN dotnet publish -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ZeepkistGTR.Auth.dll"]
+ENTRYPOINT ["dotnet", "TNRD.Zeepkist.GTR.Auth.dll"]
