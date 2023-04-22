@@ -52,12 +52,6 @@ public partial class GameAuthController : ControllerBase
             return Forbid();
         }
 
-        Result<UserModel> userResult = await GetOrCreateUser(req, CancellationToken.None);
-        if (userResult.IsFailed)
-            return Problem(userResult.ToString());
-
-        UserModel? user = userResult.Value;
-
         SteamUserAuth userAuth = factory.CreateSteamWebInterface<SteamUserAuth>(new HttpClient());
         ISteamWebResponse<SteamUserAuthResponseModel> authResult =
             await userAuth.AuthenticateUserTicket(steamOptions.AppId, req.AuthenticationTicket);
@@ -69,6 +63,12 @@ public partial class GameAuthController : ControllerBase
                 authResult.Data.Response.Error.ErrorDesc);
             return Problem("Unable to authenticate with Steam");
         }
+
+        Result<UserModel> userResult = await GetOrCreateUser(req, CancellationToken.None);
+        if (userResult.IsFailed)
+            return Problem(userResult.ToString());
+
+        UserModel? user = userResult.Value;
 
         string userId = $"{user.Id}_{user.SteamId}";
 
@@ -103,7 +103,8 @@ public partial class GameAuthController : ControllerBase
         if (userResult.Value == null)
             return NotFound();
 
-        Result<bool> validTokenResult =  await IsValidRefreshToken(userResult.Value.Id, req.RefreshToken, CancellationToken.None);
+        Result<bool> validTokenResult =
+            await IsValidRefreshToken(userResult.Value.Id, req.RefreshToken, CancellationToken.None);
         if (validTokenResult.IsFailed)
             return Problem(validTokenResult.ToString());
 
