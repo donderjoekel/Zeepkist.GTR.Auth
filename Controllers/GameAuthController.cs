@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,9 +96,19 @@ public partial class GameAuthController : ControllerBase
             return Forbid();
         }
 
-        Result<UserModel> userResult = await GetOrCreateUser(req, CancellationToken.None);
+        Result<UserModel?> userResult = await GetUser(req, CancellationToken.None);
         if (userResult.IsFailed)
             return Problem(userResult.ToString());
+
+        if (userResult.Value == null)
+            return NotFound();
+
+        Result<bool> validTokenResult =  await IsValidRefreshToken(userResult.Value.Id, req.RefreshToken, CancellationToken.None);
+        if (validTokenResult.IsFailed)
+            return Problem(validTokenResult.ToString());
+
+        if (!validTokenResult.Value)
+            return Unauthorized();
 
         UserModel? user = userResult.Value;
         string userId = $"{user.Id}_{user.SteamId}";
@@ -114,7 +125,7 @@ public partial class GameAuthController : ControllerBase
         return Ok(result.Value);
     }
 
-    private async Task<Result<UserModel>> GetOrCreateUser(GameRequestModelBase req, CancellationToken ct)
+    private async Task<Result<UserModel?>> GetUser(GameRequestModelBase req, CancellationToken ct)
     {
         Result<DirectusGetMultipleResponse<UserModel>> getResult =
             await client.Get<DirectusGetMultipleResponse<UserModel>>(
@@ -127,10 +138,12 @@ public partial class GameAuthController : ControllerBase
             return getResult.ToResult();
         }
 
-        if (getResult.Value.HasItems)
-            return getResult.Value.FirstItem!;
+        return getResult.Value.HasItems ? getResult.Value.FirstItem! : Result.Ok();
+    }
 
-        UserModel postData = new UserModel() { SteamId = req.SteamId.ToString() };
+    private async Task<Result<UserModel>> CreateUser(GameRequestModelBase req, CancellationToken ct)
+    {
+        UserModel postData = new UserModel() { SteamId = req.SteamId };
 
         Result<DirectusPostResponse<UserModel>> postResult =
             await client.Post<DirectusPostResponse<UserModel>>("items/users", postData, ct);
@@ -142,5 +155,40 @@ public partial class GameAuthController : ControllerBase
         }
 
         return postResult.Value.Data;
+    }
+
+    private async Task<Result<UserModel>> GetOrCreateUser(GameRequestModelBase req, CancellationToken ct)
+    {
+        Result<UserModel?> getResult = await GetUser(req, ct);
+
+        if (getResult.IsFailed)
+            return getResult.ToResult();
+
+        if (getResult.Value != null)
+            return getResult.Value;
+
+        return await CreateUser(req, ct);
+    }
+
+    private async Task<Result<bool>> IsValidRefreshToken(int userId, string refreshToken, CancellationToken ct)
+    {
+        Result<DirectusGetMultipleResponse<AuthModel>> result =
+            await client.Get<DirectusGetMultipleResponse<AuthModel>>(
+                $"items/auth?fields=*&filter[user_id][_eq]={userId}&filter[type][_eq]=0&filter[refresh_token][_eq]={refreshToken}",
+                ct);
+
+        if (result.IsFailed)
+        {
+            logger.LogCritical("Unable to check for valid refresh token");
+            return result.ToResult();
+        }
+
+        if (!result.Value.HasItems)
+            return false;
+
+        if (!long.TryParse(result.Value.FirstItem!.RefreshTokenExpiry, out long expiry))
+            return false;
+
+        return DateTimeOffset.FromUnixTimeSeconds(expiry) > DateTime.UtcNow;
     }
 }
