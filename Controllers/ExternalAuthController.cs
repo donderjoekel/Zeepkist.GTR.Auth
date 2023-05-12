@@ -146,7 +146,8 @@ public partial class ExternalAuthController : ControllerBase
         if (result.IsFailed)
             return Problem(result.ToString());
 
-        return Ok(result.Value);
+        string json = JsonConvert.SerializeObject(result.Value);
+        return Ok(json);
     }
 
     private async Task<Result<UserModel?>> GetUser(string steamId, CancellationToken ct)
