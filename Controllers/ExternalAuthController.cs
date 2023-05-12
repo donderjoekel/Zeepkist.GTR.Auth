@@ -198,7 +198,7 @@ public partial class ExternalAuthController : ControllerBase
     {
         Result<DirectusGetMultipleResponse<AuthModel>> result =
             await client.Get<DirectusGetMultipleResponse<AuthModel>>(
-                $"items/auth?fields=*&filter[user_id][_eq]={userId}&filter[type][_eq]=1&filter[refresh_token][_eq]={refreshToken}",
+                $"items/auth?fields=*.*&filter[user][_eq]={userId}&filter[type][_eq]=1&filter[refresh_token][_eq]={refreshToken}",
                 ct);
 
         if (result.IsFailed)
