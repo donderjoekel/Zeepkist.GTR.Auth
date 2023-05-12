@@ -109,6 +109,11 @@ namespace TNRD.Zeepkist.GTR.Auth
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ZeepkistGTR.Auth v1"));
             }
 
+            app.UseCors(policyBuilder => policyBuilder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
