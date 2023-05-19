@@ -85,7 +85,7 @@ public partial class GameAuthController : ControllerBase
         if (result.IsFailed)
             return Problem(result.ToString());
 
-        await UpdateSteamName(user.Id, user.SteamId);
+        await UpdateSteamName(user);
 
         return Ok(result.Value);
     }
@@ -146,7 +146,7 @@ public partial class GameAuthController : ControllerBase
         if (result.IsFailed)
             return Problem(result.ToString());
 
-        await UpdateSteamName(user.Id, user.SteamId);
+        await UpdateSteamName(user);
 
         return Ok(result.Value);
     }
