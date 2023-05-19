@@ -7,6 +7,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Steam.Models.SteamCommunity;
 using Steam.Models.SteamUserAuth;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
@@ -84,7 +85,29 @@ public partial class GameAuthController : ControllerBase
         if (result.IsFailed)
             return Problem(result.ToString());
 
+        await UpdateSteamName(user.Id, user.SteamId);
+
         return Ok(result.Value);
+    }
+
+    private async Task UpdateSteamName(UserModel user)
+    {
+        if (string.IsNullOrEmpty(user.SteamId))
+            return;
+
+        if (!ulong.TryParse(user.SteamId, out ulong steamId))
+            return;
+
+        SteamUser steamUser = factory.CreateSteamWebInterface<SteamUser>(new HttpClient());
+        ISteamWebResponse<PlayerSummaryModel> playerSummary = await steamUser.GetPlayerSummaryAsync(steamId);
+        string nickname = playerSummary.Data.Nickname;
+
+        Result updateSteamNameResult = await client.Patch("items/users/" + user.Id,
+            new PatchUserSteamNameModel()
+            {
+                SteamName = nickname
+            },
+            CancellationToken.None);
     }
 
     [HttpPost("refresh")]
@@ -122,6 +145,8 @@ public partial class GameAuthController : ControllerBase
 
         if (result.IsFailed)
             return Problem(result.ToString());
+
+        await UpdateSteamName(user.Id, user.SteamId);
 
         return Ok(result.Value);
     }
