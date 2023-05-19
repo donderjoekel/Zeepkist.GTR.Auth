@@ -130,7 +130,7 @@ public partial class GameAuthController : ControllerBase
     {
         Result<DirectusGetMultipleResponse<UserModel>> getResult =
             await client.Get<DirectusGetMultipleResponse<UserModel>>(
-                $"items/users?fields=*&filter[steam_id][_eq]={req.SteamId}",
+                $"items/users?fields=*.*&filter[steam_id][_eq]={req.SteamId}",
                 ct);
 
         if (getResult.IsFailed)
@@ -175,7 +175,7 @@ public partial class GameAuthController : ControllerBase
     {
         Result<DirectusGetMultipleResponse<AuthModel>> result =
             await client.Get<DirectusGetMultipleResponse<AuthModel>>(
-                $"items/auth?fields=*&filter[user_id][_eq]={userId}&filter[type][_eq]=0&filter[refresh_token][_eq]={refreshToken}",
+                $"items/auth?fields=*.*&filter[user][_eq]={userId}&filter[type][_eq]=0&filter[refresh_token][_eq]={refreshToken}",
                 ct);
 
         if (result.IsFailed)
