@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SteamWebAPI2.Utilities;
+using TNRD.Zeepkist.GTR.Auth.Database;
 using TNRD.Zeepkist.GTR.Auth.Directus;
 using TNRD.Zeepkist.GTR.Auth.Directus.Options;
 using TNRD.Zeepkist.GTR.Auth.Jwt;
@@ -46,6 +47,8 @@ namespace TNRD.Zeepkist.GTR.Auth
                     client.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", options.Token);
                 });
+            
+            services.AddNpgsql<GTRContext>(Configuration["Database:ConnectionString"]);
 
             services.AddSingleton<IDirectusClient, DirectusClient>();
             services.AddSingleton<SteamWebInterfaceFactory>(provider =>
@@ -54,8 +57,8 @@ namespace TNRD.Zeepkist.GTR.Auth
                 return new SteamWebInterfaceFactory(steamOptions.Token);
             });
 
-            services.AddSingleton<ExternalTokenService>();
-            services.AddSingleton<GameTokenService>();
+            services.AddScoped<ExternalTokenService>();
+            services.AddScoped<GameTokenService>();
 
             services.AddAuthentication(opts =>
                 {

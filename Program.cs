@@ -21,10 +21,6 @@ namespace TNRD.Zeepkist.GTR.Auth
                         .WriteTo.Console()
                         .MinimumLevel.Debug();
                 })
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddNpgsql<GTRContext>(context.Configuration["Database:ConnectionString"]);
-                })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TNRD.Zeepkist.GTR.Auth.Database;
 using TNRD.Zeepkist.GTR.Auth.Directus;
 using TNRD.Zeepkist.GTR.Auth.Options;
 
@@ -13,11 +14,11 @@ public class ExternalTokenService : AuthTokenService
 
     /// <inheritdoc />
     public ExternalTokenService(
-        IDirectusClient client,
+        GTRContext context,
         ILogger<ExternalTokenService> logger,
         IOptions<AuthOptions> authOptions
     )
-        : base(client, logger)
+        : base(logger, context)
     {
         Setup(options =>
         {

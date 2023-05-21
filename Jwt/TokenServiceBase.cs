@@ -7,19 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentResults;
 using Microsoft.IdentityModel.Tokens;
-using TNRD.Zeepkist.GTR.Auth.Directus;
 
 namespace TNRD.Zeepkist.GTR.Auth.Jwt;
 
 public abstract class TokenServiceBase
 {
-    private readonly IDirectusClient client;
-
     private RefreshServiceOptions? opts;
 
-    protected TokenServiceBase(IDirectusClient client)
+    protected TokenServiceBase()
     {
-        this.client = client;
     }
 
     public void Setup(Action<RefreshServiceOptions> options)

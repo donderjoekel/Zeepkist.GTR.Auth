@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TNRD.Zeepkist.GTR.Auth.Database;
 using TNRD.Zeepkist.GTR.Auth.Directus;
 using TNRD.Zeepkist.GTR.Auth.Options;
 
@@ -12,8 +13,8 @@ public class GameTokenService : AuthTokenService
     protected override int AuthType => 0;
 
     /// <inheritdoc />
-    public GameTokenService(IDirectusClient client, ILogger<GameTokenService> logger, IOptions<AuthOptions> authOptions)
-        : base(client, logger)
+    public GameTokenService(GTRContext context, ILogger<GameTokenService> logger, IOptions<AuthOptions> authOptions)
+        : base(logger, context)
     {
         Setup(options =>
         {
