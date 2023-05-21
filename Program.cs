@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using TNRD.Zeepkist.GTR.Auth.Database;
 
 namespace TNRD.Zeepkist.GTR.Auth
 {
@@ -18,6 +20,10 @@ namespace TNRD.Zeepkist.GTR.Auth
                     configuration
                         .WriteTo.Console()
                         .MinimumLevel.Debug();
+                })
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddNpgsql<GTRContext>(context.Configuration["Database:ConnectionString"]);
                 })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
