@@ -1,16 +1,21 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Steam.Models.SteamCommunity;
 using Steam.Models.SteamUserAuth;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
+using TNRD.Zeepkist.GTR.Auth.Database;
+using TNRD.Zeepkist.GTR.Auth.Database.Models;
 using TNRD.Zeepkist.GTR.Auth.Directus;
 using TNRD.Zeepkist.GTR.Auth.Directus.Models;
 using TNRD.Zeepkist.GTR.Auth.Jwt;
@@ -23,24 +28,24 @@ namespace TNRD.Zeepkist.GTR.Auth.Controllers;
 public partial class GameAuthController : ControllerBase
 {
     private readonly ILogger<GameAuthController> logger;
-    private readonly IDirectusClient client;
     private readonly SteamWebInterfaceFactory factory;
     private readonly SteamOptions steamOptions;
     private readonly GameTokenService gameTokenService;
+    private readonly GTRContext context;
 
     /// <inheritdoc />
     public GameAuthController(
         ILogger<GameAuthController> logger,
-        IDirectusClient client,
         SteamWebInterfaceFactory factory,
         IOptions<SteamOptions> steamOptions,
-        GameTokenService gameTokenService
+        GameTokenService gameTokenService,
+        GTRContext context
     )
     {
         this.logger = logger;
-        this.client = client;
         this.factory = factory;
         this.gameTokenService = gameTokenService;
+        this.context = context;
         this.steamOptions = steamOptions.Value;
     }
 
@@ -65,11 +70,11 @@ public partial class GameAuthController : ControllerBase
             return Problem("Unable to authenticate with Steam");
         }
 
-        Result<UserModel> userResult = await GetOrCreateUser(req, CancellationToken.None);
+        Result<User> userResult = await GetOrCreateUser(req, CancellationToken.None);
         if (userResult.IsFailed)
             return Problem(userResult.ToString());
 
-        UserModel? user = userResult.Value;
+        User? user = userResult.Value;
 
         string userId = $"{user.Id}_{user.SteamId}";
 
@@ -90,7 +95,7 @@ public partial class GameAuthController : ControllerBase
         return Ok(result.Value);
     }
 
-    private async Task UpdateSteamName(UserModel user)
+    private async Task UpdateSteamName(User user)
     {
         if (string.IsNullOrEmpty(user.SteamId))
             return;
@@ -102,12 +107,12 @@ public partial class GameAuthController : ControllerBase
         ISteamWebResponse<PlayerSummaryModel> playerSummary = await steamUser.GetPlayerSummaryAsync(steamId);
         string nickname = playerSummary.Data.Nickname;
 
-        Result updateSteamNameResult = await client.Patch("items/users/" + user.Id,
-            new PatchUserSteamNameModel()
-            {
-                SteamName = nickname
-            },
-            CancellationToken.None);
+        User foundUser = await (from u in context.Users
+            where u.Id == user.Id
+            select u).FirstAsync();
+
+        foundUser.SteamName = nickname;
+        await context.SaveChangesAsync();
     }
 
     [HttpPost("refresh")]
@@ -119,7 +124,7 @@ public partial class GameAuthController : ControllerBase
             return Forbid();
         }
 
-        Result<UserModel?> userResult = await GetUser(req, CancellationToken.None);
+        Result<User?> userResult = await GetUser(req, CancellationToken.None);
         if (userResult.IsFailed)
             return Problem(userResult.ToString());
 
@@ -134,7 +139,7 @@ public partial class GameAuthController : ControllerBase
         if (!validTokenResult.Value)
             return Unauthorized();
 
-        UserModel? user = userResult.Value;
+        User? user = userResult.Value;
         string userId = $"{user.Id}_{user.SteamId}";
 
         Result<TokenResponse> result = await gameTokenService.RefreshToken(new RefreshTokenRequest()
@@ -151,41 +156,31 @@ public partial class GameAuthController : ControllerBase
         return Ok(result.Value);
     }
 
-    private async Task<Result<UserModel?>> GetUser(GameRequestModelBase req, CancellationToken ct)
+    private async Task<Result<User?>> GetUser(GameRequestModelBase req, CancellationToken ct)
     {
-        Result<DirectusGetMultipleResponse<UserModel>> getResult =
-            await client.Get<DirectusGetMultipleResponse<UserModel>>(
-                $"items/users?fields=*.*&filter[steam_id][_eq]={req.SteamId}",
-                ct);
+        User? user = await (from u in context.Users.AsNoTracking()
+            where u.SteamId == req.SteamId
+            select u).FirstOrDefaultAsync(ct);
 
-        if (getResult.IsFailed)
-        {
-            logger.LogCritical("Unable to check if user exists: {Result}", getResult.ToString());
-            return getResult.ToResult();
-        }
-
-        return getResult.Value.HasItems ? getResult.Value.FirstItem! : Result.Ok();
+        return Result.Ok(user);
     }
 
-    private async Task<Result<UserModel>> CreateUser(GameRequestModelBase req, CancellationToken ct)
+    private async Task<Result<User>> CreateUser(GameRequestModelBase req, CancellationToken ct)
     {
-        UserModel postData = new UserModel() { SteamId = req.SteamId };
-
-        Result<DirectusPostResponse<UserModel>> postResult =
-            await client.Post<DirectusPostResponse<UserModel>>("items/users", postData, ct);
-
-        if (postResult.IsFailed)
+        User user = new User()
         {
-            logger.LogCritical("Unable to create new user: {Result}", postResult.ToString());
-            return postResult.ToResult();
-        }
+            SteamId = req.SteamId
+        };
 
-        return postResult.Value.Data;
+        EntityEntry<User> entry = context.Users.Add(user);
+        await context.SaveChangesAsync(ct);
+
+        return entry.Entity;
     }
 
-    private async Task<Result<UserModel>> GetOrCreateUser(GameRequestModelBase req, CancellationToken ct)
+    private async Task<Result<User>> GetOrCreateUser(GameRequestModelBase req, CancellationToken ct)
     {
-        Result<UserModel?> getResult = await GetUser(req, ct);
+        Result<User?> getResult = await GetUser(req, ct);
 
         if (getResult.IsFailed)
             return getResult.ToResult();
@@ -198,21 +193,14 @@ public partial class GameAuthController : ControllerBase
 
     private async Task<Result<bool>> IsValidRefreshToken(int userId, string refreshToken, CancellationToken ct)
     {
-        Result<DirectusGetMultipleResponse<AuthModel>> result =
-            await client.Get<DirectusGetMultipleResponse<AuthModel>>(
-                $"items/auth?fields=*.*&filter[user][_eq]={userId}&filter[type][_eq]=0&filter[refresh_token][_eq]={refreshToken}",
-                ct);
+        Database.Models.Auth? authModel = await (from a in context.Auths.AsNoTracking()
+            where a.User == userId && a.Type == 0 && a.RefreshToken == refreshToken
+            select a).FirstOrDefaultAsync(ct);
 
-        if (result.IsFailed)
-        {
-            logger.LogCritical("Unable to check for valid refresh token");
-            return result.ToResult();
-        }
-
-        if (!result.Value.HasItems)
+        if (authModel == null)
             return false;
 
-        if (!long.TryParse(result.Value.FirstItem!.RefreshTokenExpiry, out long expiry))
+        if (!long.TryParse(authModel.RefreshTokenExpiry, out long expiry))
             return false;
 
         return DateTimeOffset.FromUnixTimeSeconds(expiry) > DateTime.UtcNow;
