@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TNRD.Zeepkist.GTR.Auth.Database.Models;
 
-public partial class User
+public partial class User : IModel
 {
     public int Id { get; set; }
 
@@ -23,15 +23,7 @@ public partial class User
 
     public int? WorldRecords { get; set; }
 
+    public bool? Banned { get; set; }
+
     public virtual ICollection<Auth> Auths { get; set; } = new List<Auth>();
-
-    public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
-
-    public virtual ICollection<Level> Levels { get; set; } = new List<Level>();
-
-    public virtual ICollection<Record> Records { get; set; } = new List<Record>();
-
-    public virtual ICollection<Upvote> Upvotes { get; set; } = new List<Upvote>();
-
-    public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
 }
