@@ -4,7 +4,7 @@ namespace TNRD.Zeepkist.GTR.Auth;
 
 public class VersionUtils
 {
-    public static readonly SemVersion MinimumVersion = SemVersion.Parse("0.17.0", SemVersionStyles.Strict);
+    public static readonly SemVersion MinimumVersion = SemVersion.Parse("0.19.0", SemVersionStyles.Strict);
 
     public static bool MeetsMinimumVersion(string version)
     {
