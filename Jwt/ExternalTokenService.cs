@@ -1,9 +1,8 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TNRD.Zeepkist.GTR.Auth.Database;
-using TNRD.Zeepkist.GTR.Auth.Directus;
 using TNRD.Zeepkist.GTR.Auth.Options;
+using TNRD.Zeepkist.GTR.Database;
 
 namespace TNRD.Zeepkist.GTR.Auth.Jwt;
 
