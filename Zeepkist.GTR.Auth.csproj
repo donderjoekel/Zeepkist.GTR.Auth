@@ -16,8 +16,9 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
         <PackageReference Include="Semver" Version="2.2.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
-        <PackageReference Include="SteamWebAPI2" Version="4.4.0" />
+        <PackageReference Include="SteamWebAPI2" Version="4.4.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+        <PackageReference Include="TNRD.Zeepkist.GTR.Database" Version="1.1.0" />
     </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Steam.Models.Utilities;
-using TNRD.Zeepkist.GTR.Auth.Database;
+using TNRD.Zeepkist.GTR.Database;
 
 namespace TNRD.Zeepkist.GTR.Auth.Jwt;
 

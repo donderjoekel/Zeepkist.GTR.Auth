@@ -14,12 +14,10 @@ using Steam.Models.SteamCommunity;
 using Steam.Models.SteamUserAuth;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
-using TNRD.Zeepkist.GTR.Auth.Database;
-using TNRD.Zeepkist.GTR.Auth.Database.Models;
-using TNRD.Zeepkist.GTR.Auth.Directus;
-using TNRD.Zeepkist.GTR.Auth.Directus.Models;
 using TNRD.Zeepkist.GTR.Auth.Jwt;
 using TNRD.Zeepkist.GTR.Auth.Options;
+using TNRD.Zeepkist.GTR.Database;
+using TNRD.Zeepkist.GTR.Database.Models;
 
 namespace TNRD.Zeepkist.GTR.Auth.Controllers;
 
