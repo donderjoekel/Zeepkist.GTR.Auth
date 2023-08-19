@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 
 namespace TNRD.Zeepkist.GTR.Auth
 {
@@ -16,8 +17,8 @@ namespace TNRD.Zeepkist.GTR.Auth
                 .UseSerilog((context, configuration) =>
                 {
                     configuration
-                        .WriteTo.Console()
-                        .MinimumLevel.Debug();
+                        .Enrich.WithProperty("Application", "Zeepkist.GTR.Auth")
+                        .WriteTo.Console(LogEventLevel.Debug);
                 })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
