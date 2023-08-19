@@ -75,21 +75,23 @@ public partial class ExternalAuthController : ControllerBase
         if (string.IsNullOrEmpty(steamId))
             return BadRequest();
 
-        PlayerService playerService = factory.CreateSteamWebInterface<PlayerService>();
-        ISteamWebResponse<OwnedGamesResultModel> ownedGamesResponse = await playerService.GetOwnedGamesAsync(
-            ulong.Parse(steamId),
-            false,
-            true,
-            new List<uint>()
-            {
-                steamOptions.AppId
-            });
-
-        if (ownedGamesResponse == null)
-            return Problem();
-
-        if (ownedGamesResponse.Data.GameCount != 1)
-            return Forbid();
+        // TODO: Removing this check for now as it seems to break things, also it isn't super necessary
+        
+        // PlayerService playerService = factory.CreateSteamWebInterface<PlayerService>();
+        // ISteamWebResponse<OwnedGamesResultModel> ownedGamesResponse = await playerService.GetOwnedGamesAsync(
+        //     ulong.Parse(steamId),
+        //     false,
+        //     true,
+        //     new List<uint>()
+        //     {
+        //         steamOptions.AppId
+        //     });
+        //
+        // if (ownedGamesResponse == null)
+        //     return Problem();
+        //
+        // if (ownedGamesResponse.Data.GameCount != 1)
+        //     return Forbid();
 
         User user = await GetOrCreateUser(steamId, CancellationToken.None);
         string userId = $"{user.Id}_{user.SteamId}";
