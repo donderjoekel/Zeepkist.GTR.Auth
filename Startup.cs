@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -12,8 +11,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SteamWebAPI2.Utilities;
-using TNRD.Zeepkist.GTR.Auth.Directus;
-using TNRD.Zeepkist.GTR.Auth.Directus.Options;
 using TNRD.Zeepkist.GTR.Auth.Jwt;
 using TNRD.Zeepkist.GTR.Auth.Options;
 using TNRD.Zeepkist.GTR.Database;
@@ -33,24 +30,12 @@ namespace TNRD.Zeepkist.GTR.Auth
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<AuthOptions>(Configuration.GetSection("Auth"));
-            services.Configure<DirectusOptions>(Configuration.GetSection("Directus"));
             services.Configure<SteamOptions>(Configuration.GetSection("Steam"));
 
-            services.AddHttpClient("directus",
-                (provider, client) =>
-                {
-                    DirectusOptions options = provider.GetRequiredService<IOptions<DirectusOptions>>().Value;
-
-                    string baseUrl = $"http://{options.BaseUrl}:{options.Port}";
-
-                    client.BaseAddress = new Uri(baseUrl);
-                    client.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", options.Token);
-                });
+            services.AddHttpClient();
             
             services.AddNpgsql<GTRContext>(Configuration["Database:ConnectionString"]);
 
-            services.AddSingleton<IDirectusClient, DirectusClient>();
             services.AddSingleton<SteamWebInterfaceFactory>(provider =>
             {
                 SteamOptions steamOptions = provider.GetRequiredService<IOptions<SteamOptions>>().Value;

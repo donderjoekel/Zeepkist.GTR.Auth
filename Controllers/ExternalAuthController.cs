@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
@@ -17,8 +16,6 @@ using Newtonsoft.Json;
 using Steam.Models.SteamCommunity;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
-using TNRD.Zeepkist.GTR.Auth.Directus;
-using TNRD.Zeepkist.GTR.Auth.Directus.Models;
 using TNRD.Zeepkist.GTR.Auth.Jwt;
 using TNRD.Zeepkist.GTR.Auth.Options;
 using TNRD.Zeepkist.GTR.Database;
