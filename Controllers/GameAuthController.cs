@@ -50,7 +50,7 @@ public partial class GameAuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(GameLoginRequestModel req)
     {
-        if (!VersionUtils.MeetsMinimumVersion(req.ModVersion))
+        if (! await VersionUtils.MeetsMinimumVersion(context,req.ModVersion))
         {
             logger.LogWarning("Trying to refresh token with older version ({Version})", req.ModVersion);
             return Forbid();
@@ -116,7 +116,7 @@ public partial class GameAuthController : ControllerBase
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(GameRefreshRequestModel req)
     {
-        if (!VersionUtils.MeetsMinimumVersion(req.ModVersion))
+        if (! await VersionUtils.MeetsMinimumVersion(context,req.ModVersion))
         {
             logger.LogWarning("Trying to refresh token with older version ({Version})", req.ModVersion);
             return Forbid();

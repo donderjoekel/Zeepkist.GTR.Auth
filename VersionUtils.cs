@@ -1,18 +1,23 @@
-﻿using Semver;
+﻿using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Semver;
+using TNRD.Zeepkist.GTR.Database;
+using TNRD.Zeepkist.GTR.Database.Models;
 
 namespace TNRD.Zeepkist.GTR.Auth;
 
 public class VersionUtils
 {
-    public static readonly SemVersion MinimumVersion = SemVersion.Parse("0.20.5", SemVersionStyles.Strict);
-
-    public static bool MeetsMinimumVersion(string version)
+    public static async Task<bool> MeetsMinimumVersion(GTRContext context, string version)
     {
-        if (SemVersion.TryParse(version, SemVersionStyles.Strict, out SemVersion? semVersion))
-        {
-            return semVersion.ComparePrecedenceTo(MinimumVersion) >= 0;
-        }
+        if (!SemVersion.TryParse(version, SemVersionStyles.Strict, out SemVersion? semVersion))
+            return false;
 
-        return false;
+        Version dbVersion = await context.Versions.AsNoTracking().FirstAsync();
+        
+        if (!SemVersion.TryParse(dbVersion.Minimum, SemVersionStyles.Strict, out SemVersion? minimumVersion))
+            return false;
+
+        return semVersion.ComparePrecedenceTo(minimumVersion) >= 0;
     }
 }
