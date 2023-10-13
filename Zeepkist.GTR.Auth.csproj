@@ -18,7 +18,7 @@
         <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
         <PackageReference Include="SteamWebAPI2" Version="4.4.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-        <PackageReference Include="TNRD.Zeepkist.GTR.Database" Version="1.8.0" />
+        <PackageReference Include="TNRD.Zeepkist.GTR.Database" Version="2.2.0" />
     </ItemGroup>
 
 </Project>
